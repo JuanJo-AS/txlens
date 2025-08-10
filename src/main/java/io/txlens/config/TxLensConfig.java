@@ -21,9 +21,9 @@ import javax.sql.DataSource;
 public interface TxLensConfig {
 
     DataSource getReadDataSource();
-    
+
     DataSource getWriteDataSource();
-    
+
     default DataSource getDataSourceByName(String name) {
         throw new UnsupportedOperationException("There is no dataSource with name: " + name);
     }

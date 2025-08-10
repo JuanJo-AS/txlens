@@ -1,10 +1,8 @@
 package io.txlens.demo;
 
-import javax.sql.DataSource;
-
-import org.apache.commons.dbcp2.BasicDataSource;
-
 import io.txlens.config.TxLensConfig;
+import javax.sql.DataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 
 /*
  * Copyright 2025 Juan José Andrade Sánchez
@@ -51,5 +49,4 @@ public class DemoTxLensConfig implements TxLensConfig {
     public DataSource getWriteDataSource() {
         return writeDataSource;
     }
-
 }

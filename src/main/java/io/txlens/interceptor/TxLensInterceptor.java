@@ -1,18 +1,15 @@
 package io.txlens.interceptor;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.sql.DataSource;
-
 import io.txlens.annotations.TxAnotations;
 import io.txlens.annotations.TxRead;
 import io.txlens.annotations.TxWrite;
 import io.txlens.config.TxLensConfig;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.SQLException;
+import javax.sql.DataSource;
 
 /*
  * Copyright 2025 Juan José Andrade Sánchez
@@ -43,8 +40,11 @@ public class TxLensInterceptor implements InvocationHandler {
 
     @SuppressWarnings("unchecked")
     public static <T> T createProxy(T target, TxLensConfig config, Class<T> iface) {
-        return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
-                new TxLensInterceptor(target, config));
+        return (T)
+                Proxy.newProxyInstance(
+                        iface.getClassLoader(),
+                        new Class[] {iface},
+                        new TxLensInterceptor(target, config));
     }
 
     public static Connection getCurrentConnection() {
@@ -114,5 +114,4 @@ public class TxLensInterceptor implements InvocationHandler {
             connection.close();
         }
     }
-
 }
