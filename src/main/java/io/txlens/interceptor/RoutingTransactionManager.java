@@ -39,21 +39,21 @@ public class RoutingTransactionManager extends AbstractPlatformTransactionManage
         PlatformTransactionManager txManager = getTransactionManager(definition);
 
         RoutingTransaction routingTx = (RoutingTransaction) transaction;
-        routingTx.setTransactionManager(txManager);
+        routingTx.setTxManager(txManager);
         routingTx.setTxStatus(txManager.getTransaction(definition));
     }
 
     @Override
     protected void doCommit(DefaultTransactionStatus status) throws TransactionException {
         RoutingTransaction routingTx = (RoutingTransaction) status.getTransaction();
-        PlatformTransactionManager txManager = routingTx.getTransactionManager();
+        PlatformTransactionManager txManager = routingTx.getTxManager();
         txManager.commit(routingTx.getTxStatus());
     }
 
     @Override
     protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
         RoutingTransaction routingTx = (RoutingTransaction) status.getTransaction();
-        PlatformTransactionManager txManager = routingTx.getTransactionManager();
+        PlatformTransactionManager txManager = routingTx.getTxManager();
         txManager.rollback(routingTx.getTxStatus());
     }
 

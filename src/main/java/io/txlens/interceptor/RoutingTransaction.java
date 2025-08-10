@@ -6,14 +6,13 @@ import org.springframework.transaction.TransactionStatus;
 public class RoutingTransaction {
 
     private TransactionStatus txStatus;
-    private PlatformTransactionManager transactionManager;
+    private PlatformTransactionManager txManager;
 
     public RoutingTransaction() {}
 
-    public RoutingTransaction(TransactionStatus txStatus,
-            PlatformTransactionManager transactionManager) {
+    public RoutingTransaction(TransactionStatus txStatus, PlatformTransactionManager txManager) {
         this.txStatus = txStatus;
-        this.transactionManager = transactionManager;
+        this.txManager = txManager;
     }
 
     public TransactionStatus getTxStatus() {
@@ -24,12 +23,12 @@ public class RoutingTransaction {
         this.txStatus = txStatus;
     }
 
-    public PlatformTransactionManager getTransactionManager() {
-        return transactionManager;
+    public PlatformTransactionManager getTxManager() {
+        return txManager;
     }
 
-    public void setTransactionManager(PlatformTransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
+    public void setTxManager(PlatformTransactionManager transactionManager) {
+        this.txManager = transactionManager;
     }
 
 
