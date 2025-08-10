@@ -1,0 +1,13 @@
+# Java class files
+*.class
+
+# Maven target directory
+/target/
+
+# IDE files
+*.iml
+.idea/
+.vscode/
+
+# Logs
+*.log
