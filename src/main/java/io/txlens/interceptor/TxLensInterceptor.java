@@ -1,15 +1,14 @@
 package io.txlens.interceptor;
 
-import io.txlens.annotations.TxAnotations;
-import io.txlens.annotations.TxRead;
-import io.txlens.annotations.TxWrite;
-import io.txlens.config.TxLensConfig;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.sql.Connection;
-import java.sql.SQLException;
-import javax.sql.DataSource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import io.txlens.annotations.Propagation;
+import io.txlens.annotations.TxAnotations;
+import io.txlens.annotations.TxRead;
+import io.txlens.annotations.TxWrite;
 
 /*
  * Copyright 2025 Juan José Andrade Sánchez
@@ -28,27 +27,18 @@ import javax.sql.DataSource;
 public class TxLensInterceptor implements InvocationHandler {
 
     private final Object target;
-    private final TxLensConfig config;
-    private boolean isReadOnly;
+    private final PlatformTransactionManager transactionManager;
 
-    private static final ThreadLocal<Connection> currentConnection = new ThreadLocal<>();
-
-    public TxLensInterceptor(Object target, TxLensConfig config) {
+    public TxLensInterceptor(Object target, PlatformTransactionManager transactionManager) {
         this.target = target;
-        this.config = config;
+        this.transactionManager = transactionManager;
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T createProxy(T target, TxLensConfig config, Class<T> iface) {
-        return (T)
-                Proxy.newProxyInstance(
-                        iface.getClassLoader(),
-                        new Class[] {iface},
-                        new TxLensInterceptor(target, config));
-    }
-
-    public static Connection getCurrentConnection() {
-        return currentConnection.get();
+    public static <T> T createProxy(T target, PlatformTransactionManager transactionManager,
+            Class<T> iface) {
+        return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
+                new TxLensInterceptor(target, transactionManager));
     }
 
     @Override
@@ -62,56 +52,27 @@ public class TxLensInterceptor implements InvocationHandler {
             return method.invoke(target, args);
         }
 
-        DataSource dataSource = getDataSourceAndSetIsReadOnly(txRead);
+        Propagation propagation;
+        boolean readOnly;
 
-        return executeWithConnection(dataSource, method, args);
-    }
-
-    private DataSource getDataSourceAndSetIsReadOnly(TxRead txRead) {
         if (txRead != null) {
-            isReadOnly = true;
-            return config.getReadDataSource();
+            propagation = txRead.propagation();
+            readOnly = true;
         } else {
-            return config.getWriteDataSource();
+            propagation = txWrite.propagation();
+            readOnly = false;
         }
+
+        TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+        txTemplate.setPropagationBehavior(propagation.value);
+        txTemplate.setReadOnly(readOnly);
+        return txTemplate.execute(status -> {
+            try {
+                return method.invoke(target, args);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
-    private Object executeWithConnection(DataSource ds, Method method, Object[] args)
-            throws Throwable {
-        Connection connection = null;
-        try {
-            connection = ds.getConnection();
-
-            if (isReadOnly) {
-                connection.setReadOnly(true);
-                connection.setAutoCommit(true);
-            } else {
-                connection.setAutoCommit(false);
-            }
-
-            currentConnection.set(connection);
-
-            Object result = method.invoke(target, args);
-
-            if (!isReadOnly) {
-                connection.commit();
-            }
-
-            return result;
-        } catch (Exception e) {
-            if (!isReadOnly && connection != null) {
-                connection.rollback();
-            }
-            throw e.getCause() != null ? e.getCause() : e;
-        } finally {
-            closeConnection(connection);
-        }
-    }
-
-    private void closeConnection(Connection connection) throws SQLException {
-        currentConnection.remove();
-        if (connection != null) {
-            connection.close();
-        }
-    }
 }
