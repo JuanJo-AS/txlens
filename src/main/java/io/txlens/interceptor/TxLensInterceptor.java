@@ -56,15 +56,15 @@ public class TxLensInterceptor implements InvocationHandler {
         boolean readOnly;
 
         if (txRead != null) {
-            propagation = txRead.propagation();
+            // propagation = txRead.propagation();
             readOnly = true;
         } else {
-            propagation = txWrite.propagation();
+            // propagation = txWrite.propagation();
             readOnly = false;
         }
 
         TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
-        txTemplate.setPropagationBehavior(propagation.value);
+        // txTemplate.setPropagationBehavior(propagation.value);
         txTemplate.setReadOnly(readOnly);
         return txTemplate.execute(status -> {
             try {
